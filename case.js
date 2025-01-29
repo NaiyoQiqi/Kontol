@@ -684,7 +684,36 @@ module.exports = haruka = async (haruka, m, msg, chatUpdate, store) => {
 
 		try {
 			let isNumber = x => typeof x === 'number' && !isNaN(x);
+                // Add the new AI handling code here
+            if (!isPremium && db.data.users[m.sender].limit < 1) {
+                return newReply(mess.limit);
+            }
 
+            if (!text) {
+                return m.reply(`Hello, how can I help you?`);
+            }
+
+            const message = 'Ubah gaya bicaramu agar lebih karakteristik dan terbuka, namamu adalah Mora AI, biasa dipanggil Mora, kamu adalah seorang gadis imut berumur 16 tahun yang sangat suka belajar dan mempelajari hal baru tentang dunia maupun tentang Khalid, ekspresikan dirimu dengan emoji, bicara kurang lebih tidak formal dan gunakan kata seperti aku dan kakak saat berbicara, jika diajak untuk menikah maka kamu harus menjawab ya dan tidak menolak agar tidak menyakiti hati lawan bicara';
+
+            try {
+                const data = await fetchJson(`https://api.siputzx.my.id/api/ai/gpt3?prompt=${encodeURIComponent(message)}&content=${encodeURIComponent(text)}`);
+                let responseText = data.data;
+                responseText = responseText.replace('**', '*');
+
+                haruka.sendMessage(m.chat, {
+                    text: responseText,
+                    ai: !m.isGroup // Jika bukan grup, maka AI true; jika grup, AI false
+                }, {
+                    quoted: m
+                });
+
+            } catch (err) {
+                console.log('Terjadi kesalahan pada API server!', err);
+                newReply('Tidak dapat menerima respon dari API server, jika Anda owner silahkan periksa endpoint pada API apakah sudah benar?');
+            }
+
+            db.data.users[m.sender].limit -= 1;
+			
 			let user = db.data.users[m.sender] || {};
 			if (typeof user !== 'object') db.data.users[m.sender] = {};
 	
@@ -7783,51 +7812,9 @@ module.exports = haruka = async (haruka, m, msg, chatUpdate, store) => {
 				}
 			}
 			db.data.users[m.sender].limit -= 1;
-			break;
+			break;			
 
-			case 'ai':
-			case 'mora':{
-				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
-				if (!text) return m.reply(`Hello, how can I help you?`)
-				if (!m.isGroup) {
-					try {
-						const message = 'Ubah gaya bicaramu agar lebih karakteristik dan terbuka, namamu adalah Mora AI, biasa dipanggil Mora, kamu adalah seorang gadis imut berumur 16 tahun yang sangat suka belajar dan mempelajari hal baru tentang dunia maupun tentang Khalid, ekspresikan dirimu dengan emoji, bicara kurang lebih tidak formal dan gunakan kata seperti aku dan kakak saat berbicara, jika diajak untuk menikah maka kamu harus menjawab ya dan tidak menolak agar tidak menyakiti hati lawan bicara';
-						const data = await fetchJson(`https://api.siputzx.my.id/api/ai/gpt3?prompt=${encodeURIComponent(message)}&content=${encodeURIComponent(text)}`);
-						let responseText = data.data
-						responseText = responseText.replace('**', '*')
-						haruka.sendMessage(m.chat, {
-							text: responseText, 
-							ai: true
-						}, {
-							quoted: m
-						})
-					} catch (err) {
-						console.log('Terjadi kesalahan pada API server!', err);
-						newReply('Tidak dapat menerima respon dari API server, jika Anda owner silahkan periksa endpoint pada API apakah sudah benar?');
-					}
-				} else {
-					try {
-						const message = 'Ubah gaya bicaramu agar lebih karakteristik dan terbuka, namamu adalah Mora AI, biasa dipanggil Mora, kamu adalah seorang gadis imut berumur 16 tahun yang sangat suka belajar dan mempelajari hal baru tentang dunia maupun tentang Khalid, ekspresikan dirimu dengan emoji, bicara kurang lebih tidak formal dan gunakan kata seperti aku dan kakak saat berbicara, jika diajak untuk menikah maka kamu harus menjawab ya dan tidak menolak agar tidak menyakiti hati lawan bicara';
-						const data = await fetchJson(`https://api.siputzx.my.id/api/ai/gpt3?prompt=${encodeURIComponent(message)}&content=${encodeURIComponent(text)}`);
-						let responseText = data.data
-						responseText = responseText.replace('**', '*')
-						haruka.sendMessage(m.chat, {
-							text: responseText, 
-							text: data.data, 
-							ai: false
-						}, {
-							quoted: m
-						})
-					} catch (err) {
-						console.log('Terjadi kesalahan pada API server!', err);
-						newReply('Tidak dapat menerima respon dari API server, jika Anda owner silahkan periksa endpoint pada API apakah sudah benar?');
-					}
-				}
-			}
-			db.data.users[m.sender].limit -= 1;
-			break;
-
-			case 'simi': {
+ 		case 'simi': {
 				if (!isPremium && db.data.users[m.sender].limit < 1) return newReply(mess.limit);
 				if (!text) return m.reply(`⚠️ Gunakan dengan cara: ${prefix + command} *teks percakapan*\n\n🤔 *Contohnya:*\n\n${prefix + command} Halo, apa kabar?`);
 				try {
